@@ -1,0 +1,563 @@
+From 0d0a906157573b470350464597579bf57391dbf6 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Mar 2026 01:42:38 +0000
+Subject: [PATCH 1/2] feat: implement public profile page (/username) with Atab
+ messaging foundation
+
+- Add username, bio, mood, allow_anonymous columns to users table
+- Create Atab model + migration (recipient, sender, body, is_anonymous, mood)
+- Add ProfileController@show with paginated atabs
+- Register GET /{username} route (profile.show) and POST /{username}/atab placeholder
+- Create profile/show.blade.php: avatar, mood badge, send-atab form, atabs feed
+
+https://claude.ai/code/session_01Xu984EUEV8vVGy2AEiGNh2
+---
+ app/Http/Controllers/ProfileController.php    |  19 ++
+ app/Models/Atab.php                           |  36 +++
+ app/Models/User.php                           |  12 +-
+ ...5_add_username_and_mood_to_users_table.php |  28 ++
+ .../2026_03_22_014052_create_atabs_table.php  |  32 +++
+ resources/views/profile/show.blade.php        | 254 ++++++++++++++++++
+ routes/web.php                                |  11 +
+ 7 files changed, 391 insertions(+), 1 deletion(-)
+ create mode 100644 app/Http/Controllers/ProfileController.php
+ create mode 100644 app/Models/Atab.php
+ create mode 100644 database/migrations/2026_03_22_014025_add_username_and_mood_to_users_table.php
+ create mode 100644 database/migrations/2026_03_22_014052_create_atabs_table.php
+ create mode 100644 resources/views/profile/show.blade.php
+
+diff --git a/app/Http/Controllers/ProfileController.php b/app/Http/Controllers/ProfileController.php
+new file mode 100644
+index 0000000..7979b81
+--- /dev/null
++++ b/app/Http/Controllers/ProfileController.php
+@@ -0,0 +1,19 @@
++<?php
++
++namespace App\Http\Controllers;
++
++use App\Models\User;
++
++class ProfileController extends Controller
++{
++    public function show(string $username)
++    {
++        $user = User::where('username', $username)->firstOrFail();
++
++        $atabs = $user->atabs()
++            ->latest()
++            ->paginate(10);
++
++        return view('profile.show', compact('user', 'atabs'));
++    }
++}
+diff --git a/app/Models/Atab.php b/app/Models/Atab.php
+new file mode 100644
+index 0000000..7fd1577
+--- /dev/null
++++ b/app/Models/Atab.php
+@@ -0,0 +1,36 @@
++<?php
++
++namespace App\Models;
++
++use Illuminate\Database\Eloquent\Attributes\Fillable;
++use Illuminate\Database\Eloquent\Model;
++
++#[Fillable(['recipient_id', 'sender_id', 'body', 'is_anonymous', 'mood'])]
++class Atab extends Model
++{
++    protected function casts(): array
++    {
++        return [
++            'is_anonymous' => 'boolean',
++        ];
++    }
++
++    public function recipient(): \Illuminate\Database\Eloquent\Relations\BelongsTo
++    {
++        return $this->belongsTo(User::class, 'recipient_id');
++    }
++
++    public function sender(): \Illuminate\Database\Eloquent\Relations\BelongsTo
++    {
++        return $this->belongsTo(User::class, 'sender_id');
++    }
++
++    public function getSenderNameAttribute(): string
++    {
++        if ($this->is_anonymous || ! $this->sender) {
++            return 'Anonymous';
++        }
++
++        return $this->sender->name;
++    }
++}
+diff --git a/app/Models/User.php b/app/Models/User.php
+index f6ba1d2..3eb2f37 100644
+--- a/app/Models/User.php
++++ b/app/Models/User.php
+@@ -10,13 +10,23 @@
+ use Illuminate\Foundation\Auth\User as Authenticatable;
+ use Illuminate\Notifications\Notifiable;
+ 
+-#[Fillable(['name', 'email', 'password'])]
++#[Fillable(['name', 'email', 'password', 'username', 'bio', 'mood', 'allow_anonymous'])]
+ #[Hidden(['password', 'remember_token'])]
+ class User extends Authenticatable
+ {
+     /** @use HasFactory<UserFactory> */
+     use HasFactory, Notifiable;
+ 
++    public function getRouteKeyName(): string
++    {
++        return 'username';
++    }
++
++    public function atabs(): \Illuminate\Database\Eloquent\Relations\HasMany
++    {
++        return $this->hasMany(Atab::class, 'recipient_id');
++    }
++
+     /**
+      * Get the attributes that should be cast.
+      *
+diff --git a/database/migrations/2026_03_22_014025_add_username_and_mood_to_users_table.php b/database/migrations/2026_03_22_014025_add_username_and_mood_to_users_table.php
+new file mode 100644
+index 0000000..eae058a
+--- /dev/null
++++ b/database/migrations/2026_03_22_014025_add_username_and_mood_to_users_table.php
+@@ -0,0 +1,28 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    /**
++     * Run the migrations.
++     */
++    public function up(): void
++    {
++        Schema::table('users', function (Blueprint $table) {
++            $table->string('username')->unique()->nullable()->after('name');
++            $table->string('bio', 500)->nullable()->after('username');
++            $table->string('mood')->nullable()->after('bio');
++            $table->boolean('allow_anonymous')->default(true)->after('mood');
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('users', function (Blueprint $table) {
++            $table->dropColumn(['username', 'bio', 'mood', 'allow_anonymous']);
++        });
++    }
++};
+diff --git a/database/migrations/2026_03_22_014052_create_atabs_table.php b/database/migrations/2026_03_22_014052_create_atabs_table.php
+new file mode 100644
+index 0000000..1c95039
+--- /dev/null
++++ b/database/migrations/2026_03_22_014052_create_atabs_table.php
+@@ -0,0 +1,32 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    /**
++     * Run the migrations.
++     */
++    public function up(): void
++    {
++        Schema::create('atabs', function (Blueprint $table) {
++            $table->id();
++            $table->foreignId('recipient_id')->constrained('users')->cascadeOnDelete();
++            $table->foreignId('sender_id')->nullable()->constrained('users')->nullOnDelete();
++            $table->text('body');
++            $table->boolean('is_anonymous')->default(true);
++            $table->string('mood')->nullable(); // sender's emotional mood
++            $table->timestamps();
++        });
++    }
++
++    /**
++     * Reverse the migrations.
++     */
++    public function down(): void
++    {
++        Schema::dropIfExists('atabs');
++    }
++};
+diff --git a/resources/views/profile/show.blade.php b/resources/views/profile/show.blade.php
+new file mode 100644
+index 0000000..9f29ba7
+--- /dev/null
++++ b/resources/views/profile/show.blade.php
+@@ -0,0 +1,254 @@
++<!DOCTYPE html>
++<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
++<head>
++    <meta charset="utf-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1">
++    <title>{{ $user->name }} (@{{ $user->username }}) · 3tab</title>
++
++    <link rel="preconnect" href="https://fonts.bunny.net">
++    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
++
++    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
++        @vite(['resources/css/app.css', 'resources/js/app.js'])
++    @else
++        <style>
++            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
++            body {
++                font-family: 'Instrument Sans', sans-serif;
++                background: #0f0f13;
++                color: #e2e8f0;
++                min-height: 100vh;
++            }
++            a { color: inherit; text-decoration: none; }
++
++            /* Layout */
++            .container { max-width: 640px; margin: 0 auto; padding: 2rem 1rem; }
++
++            /* Profile card */
++            .profile-card {
++                background: #1a1a24;
++                border: 1px solid #2d2d3d;
++                border-radius: 1.25rem;
++                padding: 2rem;
++                margin-bottom: 2rem;
++                text-align: center;
++            }
++            .avatar {
++                width: 80px; height: 80px;
++                border-radius: 50%;
++                background: linear-gradient(135deg, #6366f1, #a855f7);
++                display: flex; align-items: center; justify-content: center;
++                font-size: 2rem; font-weight: 600;
++                margin: 0 auto 1rem;
++                color: #fff;
++            }
++            .profile-name { font-size: 1.5rem; font-weight: 600; margin-bottom: .25rem; }
++            .profile-username { color: #6b7280; font-size: .95rem; margin-bottom: .75rem; }
++            .profile-bio { color: #94a3b8; font-size: .9rem; line-height: 1.5; margin-bottom: 1rem; }
++
++            /* Mood badge */
++            .mood-badge {
++                display: inline-flex; align-items: center; gap: .4rem;
++                background: #252535; border: 1px solid #3d3d55;
++                border-radius: 2rem; padding: .35rem .85rem;
++                font-size: .85rem; color: #c084fc;
++            }
++
++            /* Send Atab form */
++            .send-card {
++                background: #1a1a24;
++                border: 1px solid #2d2d3d;
++                border-radius: 1.25rem;
++                padding: 1.5rem;
++                margin-bottom: 2rem;
++            }
++            .send-card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #c4b5fd; }
++            .send-card textarea {
++                width: 100%; min-height: 110px;
++                background: #0f0f13; border: 1px solid #2d2d3d;
++                border-radius: .75rem; padding: .85rem;
++                color: #e2e8f0; font-family: inherit; font-size: .95rem;
++                resize: vertical; outline: none;
++                transition: border-color .2s;
++            }
++            .send-card textarea:focus { border-color: #6366f1; }
++            .form-row {
++                display: flex; align-items: center; justify-content: space-between;
++                margin-top: .75rem; gap: 1rem;
++            }
++            .anonymous-label {
++                display: flex; align-items: center; gap: .5rem;
++                font-size: .85rem; color: #94a3b8; cursor: pointer;
++            }
++            .anonymous-label input[type="checkbox"] { accent-color: #6366f1; width: 16px; height: 16px; }
++            .btn-send {
++                background: linear-gradient(135deg, #6366f1, #a855f7);
++                border: none; border-radius: .75rem;
++                padding: .65rem 1.5rem;
++                color: #fff; font-family: inherit; font-size: .9rem; font-weight: 600;
++                cursor: pointer; transition: opacity .2s;
++            }
++            .btn-send:hover { opacity: .85; }
++
++            /* Closed message */
++            .closed-notice {
++                background: #1a1a24; border: 1px solid #3d2525;
++                border-radius: 1.25rem; padding: 1.25rem 1.5rem;
++                margin-bottom: 2rem; color: #f87171; font-size: .9rem; text-align: center;
++            }
++
++            /* Flash messages */
++            .flash { border-radius: .75rem; padding: .85rem 1.25rem; margin-bottom: 1.25rem; font-size: .9rem; }
++            .flash.success { background: #14301e; border: 1px solid #166534; color: #4ade80; }
++            .flash.error   { background: #2d1414; border: 1px solid #7f1d1d; color: #f87171; }
++
++            /* Atabs list */
++            .section-title {
++                font-size: .8rem; font-weight: 600; letter-spacing: .08em;
++                text-transform: uppercase; color: #6b7280; margin-bottom: 1rem;
++            }
++            .atab-card {
++                background: #1a1a24; border: 1px solid #2d2d3d;
++                border-radius: 1rem; padding: 1.25rem;
++                margin-bottom: .85rem;
++            }
++            .atab-header {
++                display: flex; align-items: center; justify-content: space-between;
++                margin-bottom: .6rem;
++            }
++            .atab-sender { font-size: .8rem; color: #6b7280; }
++            .atab-sender .anon { color: #a78bfa; font-weight: 500; }
++            .atab-mood-chip {
++                font-size: .75rem; background: #252535;
++                border: 1px solid #3d3d55; border-radius: 1rem;
++                padding: .2rem .6rem; color: #94a3b8;
++            }
++            .atab-body { font-size: .95rem; color: #cbd5e1; line-height: 1.6; }
++            .atab-time { font-size: .75rem; color: #475569; margin-top: .5rem; }
++
++            /* Empty state */
++            .empty-state { text-align: center; color: #4b5563; padding: 3rem 0; font-size: .95rem; }
++
++            /* Pagination */
++            .pagination { display: flex; justify-content: center; gap: .5rem; margin-top: 1.5rem; }
++            .pagination a, .pagination span {
++                background: #1a1a24; border: 1px solid #2d2d3d;
++                border-radius: .5rem; padding: .4rem .85rem;
++                font-size: .85rem; color: #94a3b8;
++            }
++            .pagination a:hover { border-color: #6366f1; color: #c4b5fd; }
++            .pagination .active { background: #6366f1; border-color: #6366f1; color: #fff; }
++        </style>
++    @endif
++</head>
++<body>
++<div class="container">
++
++    {{-- Profile Card --}}
++    <div class="profile-card">
++        <div class="avatar">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
++        <div class="profile-name">{{ $user->name }}</div>
++        <div class="profile-username">@{{ $user->username }}</div>
++
++        @if($user->bio)
++            <p class="profile-bio">{{ $user->bio }}</p>
++        @endif
++
++        @if($user->mood)
++            <span class="mood-badge">
++                <span>✦</span>
++                <span>{{ $user->mood }}</span>
++            </span>
++        @endif
++    </div>
++
++    {{-- Flash messages --}}
++    @if(session('success'))
++        <div class="flash success">{{ session('success') }}</div>
++    @endif
++    @if(session('error'))
++        <div class="flash error">{{ session('error') }}</div>
++    @endif
++
++    {{-- Send Atab Form --}}
++    @if($user->allow_anonymous)
++        <div class="send-card">
++            <h2>Send an Atab ✦</h2>
++            <form method="POST" action="{{ route('atab.store', $user->username) }}">
++                @csrf
++                <textarea
++                    name="body"
++                    placeholder="What do you want to say? Be honest — it's anonymous by default."
++                    maxlength="1000"
++                    required
++                >{{ old('body') }}</textarea>
++
++                @error('body')
++                    <p style="color:#f87171;font-size:.8rem;margin-top:.4rem;">{{ $message }}</p>
++                @enderror
++
++                <div class="form-row">
++                    <label class="anonymous-label">
++                        <input type="checkbox" name="is_anonymous" value="1"
++                            {{ old('is_anonymous', '1') ? 'checked' : '' }}>
++                        Send anonymously
++                    </label>
++                    <button type="submit" class="btn-send">Send Atab →</button>
++                </div>
++            </form>
++        </div>
++    @else
++        <div class="closed-notice">
++            🔒 {{ $user->name }} is not accepting messages right now.
++        </div>
++    @endif
++
++    {{-- Atabs Received --}}
++    <p class="section-title">Atabs received · {{ $atabs->total() }}</p>
++
++    @forelse($atabs as $atab)
++        <div class="atab-card">
++            <div class="atab-header">
++                <span class="atab-sender">
++                    @if($atab->is_anonymous || !$atab->sender)
++                        <span class="anon">✦ Anonymous</span>
++                    @else
++                        {{ $atab->sender->name }}
++                    @endif
++                </span>
++                @if($atab->mood)
++                    <span class="atab-mood-chip">{{ $atab->mood }}</span>
++                @endif
++            </div>
++            <p class="atab-body">{{ $atab->body }}</p>
++            <p class="atab-time">{{ $atab->created_at->diffForHumans() }}</p>
++        </div>
++    @empty
++        <div class="empty-state">
++            <p>No atabs yet.<br>Be the first to send one.</p>
++        </div>
++    @endforelse
++
++    {{-- Pagination --}}
++    @if($atabs->hasPages())
++        <div class="pagination">
++            {{-- Simple prev/next --}}
++            @if($atabs->onFirstPage())
++                <span>← Prev</span>
++            @else
++                <a href="{{ $atabs->previousPageUrl() }}">← Prev</a>
++            @endif
++
++            <span class="active">{{ $atabs->currentPage() }}</span>
++
++            @if($atabs->hasMorePages())
++                <a href="{{ $atabs->nextPageUrl() }}">Next →</a>
++            @else
++                <span>Next →</span>
++            @endif
++        </div>
++    @endif
++
++</div>
++</body>
++</html>
+diff --git a/routes/web.php b/routes/web.php
+index 86a06c5..adb67f6 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -1,7 +1,18 @@
+ <?php
+ 
++use App\Http\Controllers\ProfileController;
+ use Illuminate\Support\Facades\Route;
+ 
+ Route::get('/', function () {
+     return view('welcome');
+ });
++
++// Public profile page
++Route::get('/{username}', [ProfileController::class, 'show'])
++    ->name('profile.show')
++    ->where('username', '[a-zA-Z0-9_.-]+');
++
++// Send an Atab (placeholder — AtabController to be implemented next)
++Route::post('/{username}/atab', function () {
++    return back()->with('success', 'Your atab was sent!');
++})->name('atab.store')->where('username', '[a-zA-Z0-9_.-]+');
+-- 
+2.43.0
+
+
+From e2652c26f1086df2f6e7d767670654d46bc62c29 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Mar 2026 11:32:05 +0000
+Subject: [PATCH 2/2] docs: add CLAUDE.md with dev commands and architecture
+ overview
+
+https://claude.ai/code/session_01Xu984EUEV8vVGy2AEiGNh2
+---
+ CLAUDE.md | 60 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+ create mode 100644 CLAUDE.md
+
+diff --git a/CLAUDE.md b/CLAUDE.md
+new file mode 100644
+index 0000000..4bcd96b
+--- /dev/null
++++ b/CLAUDE.md
+@@ -0,0 +1,60 @@
++# CLAUDE.md
++
++This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
++
++## Commands
++
++```bash
++# First-time setup (install, .env, key, migrate, npm build)
++composer run setup
++
++# Start full dev environment (server + queue + logs + vite, all concurrent)
++composer run dev
++
++# Run tests
++composer run test
++
++# Run a single test file or filter
++php artisan test --filter=TestClassName
++
++# Lint / format with Pint
++./vendor/bin/pint
++
++# Run migrations
++php artisan migrate
++
++# Tinker REPL
++php artisan tinker
++```
++
++## App concept
++
++**3tab** — users have a public profile at `/{username}` where anyone can send them an **Atab**: an anonymous (or named) emotional/complaint message. The platform surfaces received atabs and supports conversation threads.
++
++## Architecture
++
++### Models
++
++- **`User`** — standard auth model extended with `username`, `bio`, `mood`, `allow_anonymous`. Route key is `username`. Has many `Atab`s as recipient.
++- **`Atab`** — a message sent to a user. Fields: `recipient_id` (required FK → users), `sender_id` (nullable FK → users), `body`, `is_anonymous` (bool, default true), `mood` (sender's emotional state). The `getSenderNameAttribute()` accessor resolves to "Anonymous" when appropriate.
++
++### Routing convention
++
++All user-facing routes use `/{username}` as the base segment. A `->where('username', '[a-zA-Z0-9_.-]+')` constraint prevents collisions with reserved paths.
++
++### Views
++
++Views use inline Tailwind/CSS with a Vite fallback: if `public/build/manifest.json` exists, Vite assets load; otherwise inline `<style>` is rendered. This pattern is used in all Blade templates.
++
++### Key files
++
++| Path | Purpose |
++|---|---|
++| `routes/web.php` | All web routes |
++| `app/Http/Controllers/ProfileController.php` | Public profile page |
++| `resources/views/profile/show.blade.php` | Profile + atab feed + send form |
++| `database/migrations/` | Schema — run in chronological order |
++
++### Database
++
++SQLite by default (see `.env.example`). The `atabs` table uses `nullOnDelete()` for `sender_id` so deleting a sender preserves the atab record.
+-- 
+2.43.0
