@@ -132,10 +132,21 @@
         /* RIGHT */
         .right-col{display:flex;flex-direction:column;gap:1.1rem}
         .activity-card{background:var(--card);border:1px solid var(--b);border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.3)}
-        .act-item{display:flex;align-items:flex-start;gap:.85rem;padding:.9rem 1.2rem;border-bottom:1px solid var(--b);transition:background .2s}
-        .act-item:last-child{border-bottom:none}.act-item:hover{background:rgba(198,146,74,.04)}
+        .act-item{
+            display:flex;align-items:flex-start;gap:.85rem;
+            padding:.9rem 1.2rem;border-bottom:1px solid var(--b);
+            transition:background .2s, box-shadow .2s;
+            text-decoration:none;color:inherit;
+            cursor:pointer;position:relative;
+        }
+        .act-item:last-child{border-bottom:none}
+        .act-item:hover{background:rgba(198,146,74,.06);box-shadow:inset 3px 0 0 var(--p)}
+        .act-item:active{background:rgba(198,146,74,.1)}
+        .act-arrow{margin-right:auto;margin-top:.25rem;font-size:.7rem;color:rgba(198,146,74,.35);transition:all .2s;flex-shrink:0}
+        .act-item:hover .act-arrow{color:var(--p);transform:translateX(-3px)}
         .act-dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.9rem;margin-top:.1rem}
         .act-dot.recv{background:rgba(90,143,194,.12);border:1px solid rgba(90,143,194,.2)}.act-dot.sent{background:rgba(198,146,74,.1);border:1px solid rgba(198,146,74,.2)}
+        .act-body{flex:1;min-width:0}
         .act-body p{font-size:.82rem;color:var(--soft);line-height:1.5}.act-body span{font-size:.7rem;color:var(--muted)}
         /* MOOD WEEK */
         .mood-week{background:var(--card);border:1px solid var(--b);border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.3)}
@@ -481,21 +492,35 @@
                 <div class="section-head" style="border-bottom:1px solid var(--b);"><h3 class="section-title">آخر النشاطات</h3></div>
                 @php $allAtabs = $receivedAtabs->concat($sentAtabs)->sortByDesc('created_at')->take(5); @endphp
                 @forelse($allAtabs as $atab)
-                <div class="act-item">
-                    <div class="act-dot {{ $receivedAtabs->contains($atab)?'recv':'sent' }}">{{ $receivedAtabs->contains($atab)?'📩':'📤' }}</div>
+                @php
+                    $isReceived = $receivedAtabs->contains($atab);
+                    // رابط الانتقال: لو العتاب مطالب به → المحادثة، لو pending ورابطه موجود → صفحة الرابط
+                    if ($atab->isClaimed()) {
+                        $actUrl = route('atab.show', $atab);
+                    } elseif ($atab->token) {
+                        $actUrl = route('atab.link', $atab->token);
+                    } else {
+                        $actUrl = route('atab.show', $atab);
+                    }
+                @endphp
+                <a href="{{ $actUrl }}" class="act-item">
+                    <div class="act-dot {{ $isReceived ? 'recv' : 'sent' }}">{{ $isReceived ? '📩' : '📤' }}</div>
                     <div class="act-body">
-<p>
-    @if($receivedAtabs->contains($atab))
-        📩 وصلك عتاب من <strong>{{ $atab->is_anonymous ? '❓ مجهول' : ($atab->sender?->name ?? 'مجهول') }}</strong>
-        @if($atab->status==='reconciled') · 🤝 مصالحة @endif
-    @else
-        📤 أرسلت عتاب لـ <strong>{{ $atab->receiver?->name ?? 'في انتظار المستلم...' }}</strong>
-        @if($atab->seen_at) · 👁️ تم القراءة @elseif($atab->status==='pending') · ⏳ لم يُفتح @endif
-        @if($atab->status==='reconciled') · 🤝 مصالحة @endif
-    @endif
-</p>                        <span>{{ $atab->created_at->diffForHumans() }}</span>
+                        <p>
+                            @if($isReceived)
+                                وصلك عتاب من <strong>{{ $atab->is_anonymous ? '❓ مجهول' : ($atab->sender?->name ?? 'مجهول') }}</strong>
+                                @if($atab->status==='reconciled') &middot; 🤝 مصالحة @endif
+                                @if(!$atab->seen_at) &middot; <span style="color:#E8B96A;font-size:.72rem;">جديد</span> @endif
+                            @else
+                                أرسلت عتاب لـ <strong>{{ $atab->receiver?->name ?? 'في انتظار المستلم...' }}</strong>
+                                @if($atab->seen_at) &middot; 👁️ تم القراءة @elseif($atab->status==='pending') &middot; <span style="color:rgba(245,237,228,.4);font-size:.72rem;">⏳ لم يُفتح</span> @endif
+                                @if($atab->status==='reconciled') &middot; 🤝 مصالحة @endif
+                            @endif
+                        </p>
+                        <span>{{ $atab->created_at->diffForHumans() }}</span>
                     </div>
-                </div>
+                    <span class="act-arrow">‹</span>
+                </a>
                 @empty
                 <div class="empty-box" style="padding:2rem 1rem;"><div class="empty-icon">🕐</div><p class="empty-sub">ما في نشاطات بعد</p></div>
                 @endforelse
