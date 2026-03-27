@@ -843,7 +843,7 @@ async function createAtabLink(){
     const oneTime=document.getElementById('link-one-time').checked;
     const expires=document.getElementById('link-expires').value;
     const btn=document.getElementById('create-btn');
-    if(!body||body.length<5){showToast('اكتب رسالة لا تقل عن 5 أحرف','e');return}
+    if(!body||body.length<3){showToast('اكتب رسالة لا تقل عن 3 أحرف','e');return}
     btn.disabled=true;btn.textContent='جاري الإنشاء...';
     try{
         const res=await fetch('{{ route("atab.link.store") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':CSRF,'Accept':'application/json'},body:JSON.stringify({body,is_anonymous:anon,is_one_time:oneTime,expires_days:expires?parseInt(expires):null})});

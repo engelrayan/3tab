@@ -14,7 +14,7 @@ class AtabLinkController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'body'         => ['required', 'string', 'min:5', 'max:500'],
+            'body'         => ['required', 'string', 'min:3', 'max:500'],
             'is_anonymous' => ['boolean'],
             'is_one_time'  => ['boolean'],
             'expires_days' => ['nullable', 'integer', 'min:1', 'max:30'],

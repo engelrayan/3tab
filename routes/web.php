@@ -14,17 +14,6 @@ use App\Http\Controllers\SafetyController;
 use App\Http\Controllers\Admin;
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\RateLimiter;
-
-// ── Rate limiters ────────────────────────────────────────────────────────────
-RateLimiter::for('guest-atab', function ($request) {
-    // الزوار: 5 عتابات في الدقيقة لكل IP
-    // المسجّلون: 20 في الدقيقة
-    return $request->user()
-        ? Limit::perMinute(20)->by($request->user()->id)
-        : Limit::perMinute(5)->by($request->ip());
-});
 
 // ── Public ───────────────────────────────────────────────────────────────────
 Route::get('/', fn() => view('welcome'))->name('home');

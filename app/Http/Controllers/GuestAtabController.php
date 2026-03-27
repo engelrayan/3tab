@@ -22,11 +22,11 @@ class GuestAtabController extends Controller
         $receiver = User::where('username', $username)->firstOrFail();
 
         $request->validate([
-            'body'         => ['required', 'string', 'min:5', 'max:500'],
+            'body'         => ['required', 'string', 'min:3', 'max:500'],
             'is_anonymous' => ['nullable', 'boolean'],
         ], [
             'body.required' => 'اكتب رسالة العتاب',
-            'body.min'      => 'الرسالة قصيرة جداً (٥ أحرف على الأقل)',
+            'body.min'      => 'الرسالة قصيرة جداً (٣ أحرف على الأقل)',
             'body.max'      => 'الرسالة طويلة جداً (٥٠٠ حرف كحد أقصى)',
         ]);
 

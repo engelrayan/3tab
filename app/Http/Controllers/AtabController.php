@@ -16,7 +16,7 @@ class AtabController extends Controller
     {
         $request->validate([
             'receiver_id'  => ['required', 'exists:users,id'],
-            'body'         => ['required', 'string', 'min:5', 'max:500'],
+            'body'         => ['required', 'string', 'min:3', 'max:500'],
             'is_anonymous' => ['boolean'],
         ]);
 
