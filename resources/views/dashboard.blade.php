@@ -33,10 +33,19 @@
         .btn-ghost:hover{border-color:var(--bh);color:var(--p);box-shadow:0 0 12px var(--glow)}
         /* JOURNEY */
         .journey-bar{display:flex;gap:.6rem;flex-wrap:wrap;animation:fadeUp .5s ease both}
-        .journey-pill{display:inline-flex;align-items:center;gap:.4rem;padding:.32rem .85rem;border-radius:999px;font-size:.75rem;font-weight:600;border:1px solid;cursor:default}
+        .journey-pill{
+            display:inline-flex;align-items:center;gap:.4rem;
+            padding:.32rem .85rem;border-radius:999px;
+            font-size:.75rem;font-weight:600;border:1px solid;
+            cursor:pointer;text-decoration:none;
+            transition:all .22s;
+        }
         .journey-pill.pending{background:rgba(198,146,74,.1);border-color:rgba(198,146,74,.3);color:var(--pl)}
+        .journey-pill.pending:hover{background:rgba(198,146,74,.2);border-color:rgba(198,146,74,.6);box-shadow:0 0 12px rgba(198,146,74,.2)}
         .journey-pill.active{background:rgba(90,143,194,.1);border-color:rgba(90,143,194,.3);color:var(--blue)}
+        .journey-pill.active:hover{background:rgba(90,143,194,.2);border-color:rgba(90,143,194,.6)}
         .journey-pill.rec{background:rgba(122,158,142,.1);border-color:rgba(122,158,142,.3);color:var(--sage)}
+        .journey-pill.rec:hover{background:rgba(122,158,142,.2);border-color:rgba(122,158,142,.6)}
         /* SMART ALERT */
         .smart-alert{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:rgba(194,113,90,.08);border:1px solid rgba(194,113,90,.3);border-radius:16px;padding:.9rem 1.4rem;animation:fadeUp .5s ease both;flex-wrap:wrap}
         .smart-alert p{font-size:.88rem;color:#e8a090}
@@ -59,7 +68,8 @@
         .btn-secondary{padding:.72rem 1.4rem;border-radius:12px;background:rgba(198,146,74,.09);border:1px solid var(--bh);color:var(--pl);font-family:'Tajawal',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .25s;white-space:nowrap}
         .btn-secondary:hover{background:rgba(198,146,74,.18);box-shadow:0 0 16px var(--glow)}
         /* MOOD BANNER */
-        .mood-banner{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:rgba(198,146,74,.07);border:1px solid var(--bh);border-radius:16px;padding:.9rem 1.4rem;animation:fadeUp .5s .04s ease both}
+        .mood-banner{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:rgba(198,146,74,.07);border:1px solid var(--bh);border-radius:16px;padding:.9rem 1.4rem;animation:fadeUp .5s .04s ease both;cursor:pointer;transition:background .2s,border-color .2s}
+        .mood-banner:hover{background:rgba(198,146,74,.11);border-color:rgba(198,146,74,.5)}
         .mood-banner p{font-size:.88rem;color:var(--pl)}
         .btn-sug{padding:.4rem 1.1rem;border-radius:999px;background:rgba(198,146,74,.15);border:1px solid var(--bh);color:var(--pl);font-family:'Tajawal',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s}
         .btn-sug:hover{background:rgba(198,146,74,.25);box-shadow:0 0 12px var(--glow)}
@@ -302,10 +312,18 @@
 
     @if($journey['pending_received'] > 0 || $journey['active'] > 0 || $journey['reconciled'] > 0)
     <div class="journey-bar">
-        @if($journey['pending_received'] > 0)<span class="journey-pill pending">⏳ {{ $journey['pending_received'] }} عتاب ينتظر ردك</span>@endif
-        @if($journey['pending_sent'] > 0)<span class="journey-pill pending">📤 {{ $journey['pending_sent'] }} عتاب لم يُفتح</span>@endif
-        @if($journey['active'] > 0)<span class="journey-pill active">💬 {{ $journey['active'] }} محادثة نشطة</span>@endif
-        @if($journey['reconciled'] > 0)<span class="journey-pill rec">🤝 {{ $journey['reconciled'] }} مصالحة</span>@endif
+        @if($journey['pending_received'] > 0)
+            <a class="journey-pill pending" href="#section-card" onclick="switchTab('received');document.getElementById('section-card').scrollIntoView({behavior:'smooth'});return false">⏳ {{ $journey['pending_received'] }} عتاب ينتظر ردك</a>
+        @endif
+        @if($journey['pending_sent'] > 0)
+            <a class="journey-pill pending" href="#section-card" onclick="switchTab('sent');document.getElementById('section-card').scrollIntoView({behavior:'smooth'});return false">📤 {{ $journey['pending_sent'] }} عتاب لم يُفتح</a>
+        @endif
+        @if($journey['active'] > 0)
+            <a class="journey-pill active" href="#section-card" onclick="switchTab('received');document.getElementById('section-card').scrollIntoView({behavior:'smooth'});return false">💬 {{ $journey['active'] }} محادثة نشطة</a>
+        @endif
+        @if($journey['reconciled'] > 0)
+            <a class="journey-pill rec" href="{{ route('reconciliations.index') }}">🤝 {{ $journey['reconciled'] }} مصالحة</a>
+        @endif
     </div>
     @endif
 
@@ -335,22 +353,22 @@
     </div>
 
     <div class="quick-actions">
-        <div class="qa-card" onclick="openCreateLinkModal()"><span class="qa-icon">✉️</span><span class="qa-label">إرسال عتاب</span><span class="qa-sub">ابدأ محادثة جديدة</span></div>
-        <div class="qa-card" onclick="switchTab('received');document.querySelector('.section-card').scrollIntoView({behavior:'smooth'})"><span class="qa-icon">📩</span><span class="qa-label">الوارد</span><span class="qa-sub">{{ $receivedAtabs->count() }} عتاب</span></div>
-        <div class="qa-card" onclick="switchTab('sent');document.querySelector('.section-card').scrollIntoView({behavior:'smooth'})"><span class="qa-icon">📤</span><span class="qa-label">الصادر</span><span class="qa-sub">{{ $sentAtabs->count() }} عتاب</span></div>
+        <a class="qa-card" href="#" onclick="openCreateLinkModal();return false"><span class="qa-icon">✉️</span><span class="qa-label">إرسال عتاب</span><span class="qa-sub">ابدأ محادثة جديدة</span></a>
+        <a class="qa-card" href="#section-card" onclick="switchTab('received');document.getElementById('section-card').scrollIntoView({behavior:'smooth'});return false"><span class="qa-icon">📩</span><span class="qa-label">الوارد</span><span class="qa-sub">{{ $receivedAtabs->count() }} عتاب</span></a>
+        <a class="qa-card" href="#section-card" onclick="switchTab('sent');document.getElementById('section-card').scrollIntoView({behavior:'smooth'});return false"><span class="qa-icon">📤</span><span class="qa-label">الصادر</span><span class="qa-sub">{{ $sentAtabs->count() }} عتاب</span></a>
     </div>
 
     <div class="stats-grid">
-        <div class="stat stat-recv" onclick="switchTab('received');document.querySelector('.section-card').scrollIntoView({behavior:'smooth'})">
+        <a class="stat stat-recv" href="#section-card" onclick="switchTab('received');document.getElementById('section-card').scrollIntoView({behavior:'smooth'});return false">
             <span class="stat-icon">📩</span>
             <span class="stat-val">{{ $receivedAtabs->count() }}</span>
             <span class="stat-lbl">عتاب وارد</span>
-        </div>
-        <div class="stat stat-sent" onclick="switchTab('sent');document.querySelector('.section-card').scrollIntoView({behavior:'smooth'})">
+        </a>
+        <a class="stat stat-sent" href="#section-card" onclick="switchTab('sent');document.getElementById('section-card').scrollIntoView({behavior:'smooth'});return false">
             <span class="stat-icon">📤</span>
             <span class="stat-val">{{ $sentAtabs->count() }}</span>
             <span class="stat-lbl">عتاب صادر</span>
-        </div>
+        </a>
         <a href="{{ route('reconciliations.index') }}" class="stat stat-rec">
             <span class="stat-icon">🤝</span>
             <span class="stat-val">{{ $receivedAtabs->where('status','reconciled')->count() + $sentAtabs->where('status','reconciled')->count() }}</span>
@@ -364,7 +382,7 @@
     </div>
 
     <div class="two-col">
-        <div class="section-card">
+        <div class="section-card" id="section-card">
             <div class="section-head">
                 <h3 class="section-title">العتابات</h3>
                 <div class="tabs-mini">
