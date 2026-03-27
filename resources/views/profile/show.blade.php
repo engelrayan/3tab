@@ -158,10 +158,63 @@
         .page > *:nth-child(4){animation-delay:.24s}
         .page > *:nth-child(5){animation-delay:.3s}
 
+        /* ── MOOD CONTEXT BLOCK ── */
+        .mood-context-block{
+            display:flex;align-items:flex-start;gap:.75rem;
+            padding:.8rem 1rem;border-radius:14px;margin-bottom:1rem;
+            background:rgba(100,149,237,.07);border:1px solid rgba(100,149,237,.2);
+            animation:fadeUp .4s ease both;
+        }
+        .mood-context-block.happy{background:rgba(122,158,142,.07);border-color:rgba(122,158,142,.2)}
+        .mood-context-block.calm{background:rgba(122,158,142,.07);border-color:rgba(122,158,142,.2)}
+        .mood-context-block.angry{background:rgba(198,146,74,.07);border-color:rgba(198,146,74,.25)}
+        .mood-context-block.anxious{background:rgba(194,113,90,.07);border-color:rgba(194,113,90,.22)}
+        .mood-context-block.sad{background:rgba(100,149,237,.08);border-color:rgba(100,149,237,.25);animation:moodPulse 3s ease-in-out infinite}
+        @keyframes moodPulse{0%,100%{box-shadow:0 0 0 0 rgba(100,149,237,0)}50%{box-shadow:0 0 12px 3px rgba(100,149,237,.1)}}
+        .mood-ctx-emoji{font-size:1.4rem;flex-shrink:0;line-height:1.3}
+        .mood-ctx-text{font-size:.83rem;color:var(--soft);line-height:1.6}
+        .mood-ctx-cta{font-size:.82rem;font-weight:700;color:var(--primary-light);margin-top:.15rem;display:block}
+
+        /* ── MOOD EXPIRY PILL ── */
+        .mood-expiry-pill{
+            display:inline-flex;align-items:center;gap:.4rem;
+            background:rgba(0,0,0,.25);border:1px solid var(--border);
+            border-radius:999px;padding:.22rem .75rem;
+            font-size:.72rem;color:var(--muted);margin-top:.55rem;
+        }
+        .expiry-dot{width:5px;height:5px;border-radius:50%;background:var(--sage);flex-shrink:0}
+
+        /* ── MOOD SHARE CARD ── */
+        .mood-share-card{
+            background:var(--dark-card);border:1px solid var(--border);
+            border-radius:20px;padding:1.3rem 1.4rem;
+        }
+        .mood-share-title{font-family:'Amiri',serif;font-size:1.1rem;color:var(--text);margin-bottom:.3rem}
+        .mood-share-sub{font-size:.79rem;color:var(--muted);margin-bottom:.9rem;line-height:1.6}
+        .mood-share-preview{
+            background:rgba(0,0,0,.3);border:1px dashed rgba(198,146,74,.2);
+            border-radius:10px;padding:.65rem .9rem;font-size:.79rem;
+            color:var(--soft);line-height:1.7;margin-bottom:.9rem;
+            font-style:italic;white-space:pre-wrap;
+        }
+        .mood-share-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+        .mood-sbtn{
+            padding:.5rem .95rem;border-radius:10px;border:1px solid;
+            font-family:'Tajawal',sans-serif;font-size:.8rem;font-weight:600;
+            cursor:pointer;transition:all .22s;display:inline-flex;align-items:center;gap:.35rem;
+        }
+        .ms-wa{background:rgba(37,211,102,.08);border-color:rgba(37,211,102,.22);color:#25d366}
+        .ms-wa:hover{background:rgba(37,211,102,.18)}
+        .ms-tw{background:rgba(29,161,242,.08);border-color:rgba(29,161,242,.22);color:#1da1f2}
+        .ms-tw:hover{background:rgba(29,161,242,.18)}
+        .ms-cp{background:rgba(198,146,74,.08);border-color:rgba(198,146,74,.22);color:var(--primary-light)}
+        .ms-cp:hover{background:rgba(198,146,74,.18)}
+
         @media(max-width:500px){
             .hero-hook{font-size:1.45rem}
             .stats-strip{grid-template-columns:repeat(3,1fr);gap:.5rem}
             .sstat-val{font-size:1.6rem}
+            .mood-share-btns{gap:.4rem}
         }
     </style>
 </head>
@@ -212,13 +265,20 @@
             🔒 تقدر تبعت بدون اسم… محدش هيعرفك
         </div>
 
-        @if($todayMood)
+        @if($activeMood)
         <p class="hero-mood-line">
-            {{ $user->name }} حاسس/ة إنه <strong style="color:var(--primary-light)">{{ $todayMood->mood->name_ar }} {{ $todayMood->mood->emoji }}</strong> النهاردة
-            @if($todayMood->custom_message)
-            — "{{ $todayMood->custom_message }}"
+            {{ $user->name }} حاسس/ة إنه
+            <strong style="color:var(--primary-light)">{{ $activeMood->mood->name_ar }} {{ $activeMood->mood->emoji }}</strong>
+            @if($activeMood->custom_message)
+            — "{{ $activeMood->custom_message }}"
             @endif
         </p>
+        @if($activeMood->expires_at)
+        <div class="mood-expiry-pill">
+            <span class="expiry-dot"></span>
+            <span id="mood-expiry-text">الحالة نشطة</span>
+        </div>
+        @endif
         @endif
     </div>
 
@@ -239,11 +299,23 @@
 
         {{-- ── The form itself ── --}}
         <div id="send-form-wrap">
+
+            {{-- Mood context block --}}
+            @if($activeMood)
+            <div class="mood-context-block {{ $activeMood->mood->name_en }}">
+                <span class="mood-ctx-emoji">{{ $activeMood->mood->emoji }}</span>
+                <div>
+                    <div class="mood-ctx-text">{{ $moodEngine['profile_sub'] }}</div>
+                    <span class="mood-ctx-cta">{{ $moodEngine['profile_cta'] }}</span>
+                </div>
+            </div>
+            @endif
+
             <textarea
                 id="atab-body"
                 class="send-textarea"
                 maxlength="1000"
-                placeholder="قول اللي نفسك تقوله ومش عارف تقوله وش لوش…"
+                placeholder="{{ $activeMood ? $moodEngine['placeholder'] : 'قول اللي نفسك تقوله ومش عارف تقوله وش لوش…' }}"
                 oninput="onBodyInput(this)"
                 autofocus
             ></textarea>
@@ -315,6 +387,20 @@
     @endguest
 
     @endif {{-- end owner check --}}
+
+    {{-- ══ MOOD SHARE CARD (owner only) ══ --}}
+    @if(auth()->check() && auth()->id() === $user->id && $activeMood)
+    <div class="mood-share-card">
+        <div class="mood-share-title">{{ $activeMood->mood->emoji }} شارك حالتك وخلي الناس تتكلم</div>
+        <div class="mood-share-sub">الرسالة دي هتتبعت مع رابطك — اضغط ونشر</div>
+        <div class="mood-share-preview" id="mood-share-preview">{{ $shareText }}</div>
+        <div class="mood-share-btns">
+            <button class="mood-sbtn ms-wa" onclick="moodShareWa()">📱 واتساب</button>
+            <button class="mood-sbtn ms-tw" onclick="moodShareTw()">𝕏 تويتر</button>
+            <button class="mood-sbtn ms-cp" id="ms-cp-btn" onclick="moodShareCopy()">📋 نسخ</button>
+        </div>
+    </div>
+    @endif
 
     {{-- ══ STATS STRIP ══ --}}
     @if($stats['total'] > 0)
@@ -495,6 +581,40 @@
     $('postsend-modal')?.addEventListener('click', function(e) {
         if (e.target === this) closeModal();
     });
+
+    /* ── mood expiry countdown ── */
+    @if($activeMood && $activeMood->expires_at)
+    (function(){
+        const expiresAt = new Date('{{ $activeMood->expires_at->toIso8601String() }}');
+        function updateExpiry() {
+            const el = $('mood-expiry-text'); if (!el) return;
+            const diff = Math.floor((expiresAt - Date.now()) / 1000);
+            if (diff <= 0) { el.textContent = 'انتهت الحالة'; return; }
+            const h = Math.floor(diff / 3600);
+            const m = Math.floor((diff % 3600) / 60);
+            el.textContent = h > 0
+                ? `الحالة هتختفي بعد ${h} ساعة${m > 0 ? ` و${m} دقيقة` : ''}`
+                : `الحالة هتختفي بعد ${m} دقيقة`;
+        }
+        updateExpiry();
+        setInterval(updateExpiry, 60000);
+    })();
+    @endif
+
+    /* ── mood share (owner) ── */
+    @auth
+    @if(auth()->id() === $user->id)
+    const MOOD_SHARE_TEXT = {{ json_encode($shareText) }};
+    const MOOD_PROFILE_URL = '{{ $profileUrl }}';
+    window.moodShareWa   = () => window.open('https://wa.me/?text=' + encodeURIComponent(MOOD_SHARE_TEXT), '_blank');
+    window.moodShareTw   = () => window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(MOOD_SHARE_TEXT), '_blank');
+    window.moodShareCopy = function() {
+        copyText(MOOD_SHARE_TEXT);
+        const btn = $('ms-cp-btn');
+        if (btn) { btn.textContent = '✅ اتنسخ!'; setTimeout(() => btn.textContent = '📋 نسخ', 2000); }
+    };
+    @endif
+    @endauth
 
     /* ── link guest atabs on load (if logged in + guest_token) ── */
     @auth

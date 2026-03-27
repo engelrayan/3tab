@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Atab;
+use App\Services\MoodEngine;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
@@ -12,27 +13,37 @@ class ProfileController extends Controller
     {
         $user = User::where('username', $username)->firstOrFail();
 
-        $todayMood = $user->todayMood()->with('mood')->first();
+        // الحالة النشطة (لم تنتهِ)
+        $activeMood = $user->activeMood()->with('mood')->first();
 
         // إحصائيات
         $total      = Atab::where('receiver_id', $user->id)->count();
         $reconciled = Atab::where('receiver_id', $user->id)
-                          ->where('status', Atab::STATUS_RECONCILED)
-                          ->count();
+                          ->where('status', Atab::STATUS_RECONCILED)->count();
         $anonymous  = Atab::where('receiver_id', $user->id)
-                          ->where('is_anonymous', true)
-                          ->count();
+                          ->where('is_anonymous', true)->count();
         $today      = Atab::where('receiver_id', $user->id)
-                          ->whereDate('created_at', today())
-                          ->count();
+                          ->whereDate('created_at', today())->count();
 
         $stats = [
-            'total'          => $total,
-            'reconciled'     => $reconciled,
-            'anonymous_pct'  => $total > 0 ? round(($anonymous / $total) * 100) : 0,
-            'today'          => $today,
+            'total'         => $total,
+            'reconciled'    => $reconciled,
+            'anonymous_pct' => $total > 0 ? round(($anonymous / $total) * 100) : 0,
+            'today'         => $today,
         ];
 
-        return view('profile.show', compact('user', 'todayMood', 'stats'));
+        // بيانات الـ mood engine للبروفايل
+        $moodType      = $activeMood?->mood?->name_en;
+        $moodEngine    = MoodEngine::get($moodType);
+        $profileUrl    = route('profile.show', $user->username);
+        $shareText     = MoodEngine::shareText($moodType, $profileUrl);
+
+        // backward compat
+        $todayMood = $activeMood;
+
+        return view('profile.show', compact(
+            'user', 'todayMood', 'activeMood', 'stats',
+            'moodEngine', 'shareText', 'profileUrl'
+        ));
     }
 }

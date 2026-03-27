@@ -38,8 +38,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Mood
-    Route::post('/mood',         [MoodController::class, 'store'])->name('mood.store');
-    Route::get('/mood/history',  [MoodController::class, 'history'])->name('mood.history');
+    Route::post('/mood',            [MoodController::class, 'store'])->name('mood.store')->middleware('throttle:3,1');
+    Route::get('/mood/history',     [MoodController::class, 'history'])->name('mood.history');
+    Route::get('/mood/analytics',   [MoodController::class, 'analytics'])->name('mood.analytics');
 
     // Atab — normal
     Route::post('/atab',                  [AtabController::class, 'store'])->name('atab.store')->middleware('throttle:5,1');

@@ -47,6 +47,17 @@ class User extends Authenticatable
                     ->latest();
     }
 
+    // الحالة النشطة حالياً (لم تنتهِ صلاحيتها)
+    public function activeMood(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserMood::class)
+                    ->where(function ($q) {
+                        $q->whereNull('expires_at')
+                          ->orWhere('expires_at', '>', now());
+                    })
+                    ->latest();
+    }
+
 // المستخدمون الذين تجاهلهم هذا المستخدم
 public function ignoredUsers(): \Illuminate\Database\Eloquent\Relations\HasMany
 {

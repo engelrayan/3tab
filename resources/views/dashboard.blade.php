@@ -93,6 +93,26 @@
         .stat-recv .stat-val{color:var(--blue);text-shadow:0 0 16px rgba(90,143,194,.4)}.stat-sent .stat-val{color:var(--p);text-shadow:0 0 16px var(--glow2)}.stat-rec .stat-val{color:var(--sage);text-shadow:0 0 16px rgba(122,158,142,.4)}.stat-pend .stat-val{color:var(--rose);text-shadow:0 0 16px rgba(194,113,90,.4)}
         /* TWO COL */
         .two-col{display:grid;grid-template-columns:1fr 340px;gap:1.2rem;align-items:start;animation:fadeUp .5s .14s ease both}
+        /* MOOD SHARE + COUNTDOWN */
+        .mood-share-dash{background:var(--card);border:1px solid var(--b);border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.3)}
+        .mood-expiry-bar{display:flex;align-items:center;gap:.5rem;padding:.6rem 1.2rem;background:rgba(0,0,0,.2);border-bottom:1px solid var(--b);font-size:.76rem;color:var(--muted)}
+        .meb-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:blink 1.4s ease-in-out infinite}
+        .mood-share-body{padding:1rem 1.2rem}
+        .mood-share-preview-dash{background:rgba(0,0,0,.3);border:1px dashed rgba(198,146,74,.2);border-radius:10px;padding:.65rem .9rem;font-size:.78rem;color:var(--soft);line-height:1.7;margin-bottom:.8rem;white-space:pre-wrap;font-style:italic}
+        .mood-share-btns-dash{display:flex;gap:.45rem;flex-wrap:wrap}
+        .msd-btn{padding:.45rem .9rem;border-radius:9px;border:1px solid;font-family:'Tajawal',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .22s}
+        .msd-wa{background:rgba(37,211,102,.08);border-color:rgba(37,211,102,.22);color:#25d366}.msd-wa:hover{background:rgba(37,211,102,.18)}
+        .msd-tw{background:rgba(29,161,242,.08);border-color:rgba(29,161,242,.22);color:#1da1f2}.msd-tw:hover{background:rgba(29,161,242,.18)}
+        .msd-cp{background:rgba(198,146,74,.08);border-color:rgba(198,146,74,.22);color:var(--pl)}.msd-cp:hover{background:rgba(198,146,74,.18)}
+        /* MOOD ANALYTICS */
+        .analytics-card{background:var(--card);border:1px solid var(--b);border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.3)}
+        .ana-row{display:flex;align-items:center;justify-content:space-between;padding:.65rem 1.2rem;border-bottom:1px solid rgba(198,146,74,.06);transition:background .2s}
+        .ana-row:last-child{border-bottom:none}
+        .ana-row:hover{background:rgba(198,146,74,.04)}
+        .ana-left{display:flex;align-items:center;gap:.55rem;font-size:.84rem;color:var(--soft)}
+        .ana-bar-wrap{flex:1;height:5px;background:rgba(198,146,74,.1);border-radius:3px;margin:0 .7rem}
+        .ana-bar{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--pl),var(--p));transition:width .6s ease}
+        .ana-num{font-size:.78rem;color:var(--muted);white-space:nowrap}
         .section-card{background:var(--card);border:1px solid var(--b);border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.35)}
         .section-head{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;border-bottom:1px solid var(--b)}
         .section-title{font-family:'Amiri',serif;font-size:1.1rem;color:var(--text)}
@@ -549,6 +569,31 @@
                 <div class="mood-week-grid" id="mood-week-grid"><span style="font-size:.78rem;color:var(--muted);padding:.5rem;">جاري التحميل...</span></div>
             </div>
 
+            {{-- ── MOOD SHARE CARD ── --}}
+            <div class="mood-share-dash" id="mood-share-dash" style="{{ $activeMood ? '' : 'display:none;' }}">
+                <div class="mood-expiry-bar">
+                    <div class="meb-dot"></div>
+                    <span id="mood-expiry-dash-text">حالتك نشطة</span>
+                </div>
+                <div class="mood-share-body">
+                    <p style="font-size:.78rem;color:var(--muted);margin-bottom:.45rem;">شارك حالتك مع رسالة مناسبة</p>
+                    <div class="mood-share-preview-dash" id="mood-share-preview-dash">{{ $shareText ?? '' }}</div>
+                    <div class="mood-share-btns-dash">
+                        <button class="msd-btn msd-wa" onclick="moodShareWa()">💬 واتساب</button>
+                        <button class="msd-btn msd-tw" onclick="moodShareTw()">𝕏 تويتر</button>
+                        <button class="msd-btn msd-cp" onclick="moodShareCopy(this)">📋 نسخ</button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ── MOOD ANALYTICS ── --}}
+            <div class="analytics-card" id="mood-analytics-card" style="display:none;">
+                <div class="section-head" style="border-bottom:1px solid var(--b);">
+                    <h3 class="section-title">📊 تأثير حالتك</h3>
+                </div>
+                <div id="analytics-rows"></div>
+            </div>
+
             {{-- ── SAFETY MODE CARD ── --}}
             <div class="suggest-card" style="border:1px solid var(--b)">
                 <div class="section-head" style="border-bottom:1px solid var(--b);padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;">
@@ -809,14 +854,16 @@ async function saveMood(){
         const data=await res.json();
         if(data.success){
             closeMoodModal();showToast(data.message,'s');
-            document.getElementById('hero-mood-text').textContent=`حالتك اليوم: ${data.mood.emoji} ${data.mood.name}${note?' · '+note:''}`;
-            document.getElementById('mood-tag-btn').textContent=`${data.mood.emoji} غيّر حالتك اليوم`;
+            document.getElementById('hero-mood-text').textContent=`حالتك: ${data.mood.emoji} ${data.mood.name}${note?' · '+note:''}`;
+            document.getElementById('mood-tag-btn').textContent=`${data.mood.emoji} غيّر حالتك`;
             document.getElementById('nav-name').textContent=`${data.mood.emoji} {{ auth()->user()->name }}`;
             applyMoodEngine(data.mood.type);
             setTimeout(()=>showToast(data.engine.toast,'i'),500);
             if(data.smart_suggestion)setTimeout(()=>showToast(data.smart_suggestion,'i',6000),1200);
             loadMoodHistory();
-        }else{showToast('حدث خطأ، حاول مرة أخرى','e')}
+            if(data.mood.seconds_remaining)startMoodCountdown(data.mood.seconds_remaining);
+            renderMoodShareCard(data.mood,data.share_text,data.profile_url);
+        }else{showToast(data.message||'تقدر تغير حالتك مرة كل ساعة','e')}
     }catch(e){showToast('حدث خطأ في الاتصال','e')}
     finally{btn.disabled=false;btn.textContent='حفظ الحالة ✓'}
 }
@@ -831,6 +878,68 @@ async function loadMoodHistory(){
         grid.innerHTML=data.history.map(d=>`<div class="mood-day ${d.date===today?'today':''}" title="${d.name}"><span class="mood-day-emoji">${d.emoji}</span><span class="mood-day-label">${new Date(d.date+'T12:00:00').toLocaleDateString('ar-EG',{weekday:'short'})}</span><span class="mood-day-dot"></span></div>`).join('');
         if(data.smart)showToast(data.smart,'i',6000);
     }catch(e){}
+}
+
+// ── Mood Share Card ───────────────────────────────────────────────────────────
+let moodShareText = @json($shareText ?? '');
+let moodCountdownTimer = null;
+
+function startMoodCountdown(seconds) {
+    if (moodCountdownTimer) clearInterval(moodCountdownTimer);
+    const el = document.getElementById('mood-expiry-dash-text');
+    if (!el) return;
+    function tick() {
+        if (seconds <= 0) { el.textContent = 'انتهت الحالة'; clearInterval(moodCountdownTimer); return; }
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        el.textContent = `تنتهي بعد ${h}س ${m}د`;
+        seconds -= 60;
+    }
+    tick();
+    moodCountdownTimer = setInterval(tick, 60000);
+}
+
+function renderMoodShareCard(mood, shareText, profileUrl) {
+    moodShareText = shareText;
+    const card = document.getElementById('mood-share-dash');
+    const preview = document.getElementById('mood-share-preview-dash');
+    if (preview) preview.textContent = shareText;
+    if (card) card.style.display = '';
+    if (mood.seconds_remaining) startMoodCountdown(mood.seconds_remaining);
+    loadMoodAnalytics();
+}
+
+function moodShareWa() {
+    window.open('https://wa.me/?text=' + encodeURIComponent(moodShareText), '_blank');
+}
+function moodShareTw() {
+    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(moodShareText), '_blank');
+}
+function moodShareCopy(btn) {
+    copyText(moodShareText);
+    const orig = btn.textContent;
+    btn.textContent = '✅ تم النسخ';
+    setTimeout(() => btn.textContent = orig, 2200);
+    showToast('تم نسخ رسالة الحالة 📋', 's');
+}
+
+async function loadMoodAnalytics() {
+    try {
+        const res = await fetch('{{ route("mood.analytics") }}', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF } });
+        const data = await res.json();
+        if (!data.by_mood?.length) return;
+        const card = document.getElementById('mood-analytics-card');
+        if (!card) return;
+        const max = Math.max(...data.by_mood.map(r => r.total), 1);
+        document.getElementById('analytics-rows').innerHTML = data.by_mood.map(r =>
+            `<div class="ana-row">
+                <div class="ana-left">${r.emoji} ${r.mood}</div>
+                <div class="ana-bar-wrap"><div class="ana-bar" style="width:${Math.round(r.total/max*100)}%"></div></div>
+                <div class="ana-num">${r.total} رسالة</div>
+            </div>`
+        ).join('');
+        card.style.display = '';
+    } catch(e) {}
 }
 
 function openCreateLinkModal(){document.getElementById('create-link-modal').classList.add('open');setTimeout(()=>document.getElementById('link-body').focus(),100)}
@@ -861,6 +970,10 @@ function shareFacebook(){if(generatedLink)window.open('https://www.facebook.com/
 document.addEventListener('DOMContentLoaded',()=>{
     loadMoodHistory();
     if(currentMoodType)applyMoodEngine(currentMoodType);
+    @if($activeMood)
+    startMoodCountdown({{ $activeMood->secondsRemaining() }});
+    loadMoodAnalytics();
+    @endif
     document.getElementById('mood-banner-btn').onclick=
         '{{ $moodEngine["cta_action"] }}'==='send'?openCreateLinkModal:()=>{switchTab('received');document.querySelector('.section-card')?.scrollIntoView({behavior:'smooth'})};
     document.getElementById('dynamic-suggestion-btn').onclick=
