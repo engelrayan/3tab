@@ -93,17 +93,34 @@
         .stat-recv .stat-val{color:var(--blue);text-shadow:0 0 16px rgba(90,143,194,.4)}.stat-sent .stat-val{color:var(--p);text-shadow:0 0 16px var(--glow2)}.stat-rec .stat-val{color:var(--sage);text-shadow:0 0 16px rgba(122,158,142,.4)}.stat-pend .stat-val{color:var(--rose);text-shadow:0 0 16px rgba(194,113,90,.4)}
         /* TWO COL */
         .two-col{display:grid;grid-template-columns:1fr 340px;gap:1.2rem;align-items:start;animation:fadeUp .5s .14s ease both}
-        /* MOOD SHARE + COUNTDOWN */
-        .mood-share-dash{background:var(--card);border:1px solid var(--b);border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.3)}
-        .mood-expiry-bar{display:flex;align-items:center;gap:.5rem;padding:.6rem 1.2rem;background:rgba(0,0,0,.2);border-bottom:1px solid var(--b);font-size:.76rem;color:var(--muted)}
-        .meb-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:blink 1.4s ease-in-out infinite}
-        .mood-share-body{padding:1rem 1.2rem}
-        .mood-share-preview-dash{background:rgba(0,0,0,.3);border:1px dashed rgba(198,146,74,.2);border-radius:10px;padding:.65rem .9rem;font-size:.78rem;color:var(--soft);line-height:1.7;margin-bottom:.8rem;white-space:pre-wrap;font-style:italic}
-        .mood-share-btns-dash{display:flex;gap:.45rem;flex-wrap:wrap}
-        .msd-btn{padding:.45rem .9rem;border-radius:9px;border:1px solid;font-family:'Tajawal',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .22s}
-        .msd-wa{background:rgba(37,211,102,.08);border-color:rgba(37,211,102,.22);color:#25d366}.msd-wa:hover{background:rgba(37,211,102,.18)}
-        .msd-tw{background:rgba(29,161,242,.08);border-color:rgba(29,161,242,.22);color:#1da1f2}.msd-tw:hover{background:rgba(29,161,242,.18)}
-        .msd-cp{background:rgba(198,146,74,.08);border-color:rgba(198,146,74,.22);color:var(--pl)}.msd-cp:hover{background:rgba(198,146,74,.18)}
+        /* ── SMART SHARE GENERATOR ── */
+        .ssg-card{background:linear-gradient(145deg,#1e1208,#160e06);border:1px solid rgba(198,146,74,.3);border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.4);position:relative}
+        .ssg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--rose),var(--p),var(--pl),var(--p),var(--rose))}
+        .ssg-card-glow{position:absolute;top:-20px;left:-20px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(198,146,74,.08),transparent 70%);pointer-events:none}
+        .ssg-head{padding:.9rem 1.2rem;border-bottom:1px solid rgba(198,146,74,.1);display:flex;align-items:center;justify-content:space-between;gap:.5rem;position:relative;z-index:1}
+        .ssg-title{font-family:'Amiri',serif;font-size:1rem;color:var(--pl);margin-bottom:.12rem}
+        .ssg-sub{font-size:.7rem;color:rgba(198,146,74,.5)}
+        .ssg-expiry-pill{background:rgba(122,158,142,.12);border:1px solid rgba(122,158,142,.25);border-radius:999px;padding:.2rem .65rem;font-size:.68rem;color:var(--sage);white-space:nowrap;flex-shrink:0}
+        .ssg-body{padding:.9rem 1.1rem;display:flex;flex-direction:column;gap:.65rem;position:relative;z-index:1}
+        .ssg-preview{background:rgba(0,0,0,.35);border:1px dashed rgba(198,146,74,.22);border-radius:12px;padding:.75rem .95rem;font-size:.8rem;color:var(--soft);line-height:1.85;white-space:pre-wrap;min-height:72px;transition:opacity .25s}
+        .ssg-preview.loading{opacity:.45}
+        .ssg-regen-btn{align-self:flex-end;padding:.38rem 1rem;border-radius:999px;background:rgba(198,146,74,.1);border:1px solid rgba(198,146,74,.28);color:var(--pl);font-family:'Tajawal',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .22s}
+        .ssg-regen-btn:hover{background:rgba(198,146,74,.2);border-color:var(--bh);box-shadow:0 0 12px var(--glow)}
+        .ssg-regen-btn:disabled{opacity:.5;cursor:default}
+        .ssg-toggle-custom{width:100%;padding:.4rem;background:none;border:1px dashed rgba(198,146,74,.15);border-radius:8px;color:rgba(198,146,74,.45);font-family:'Tajawal',sans-serif;font-size:.75rem;cursor:pointer;transition:all .2s;text-align:center}
+        .ssg-toggle-custom:hover{border-color:rgba(198,146,74,.35);color:var(--pl)}
+        .ssg-custom-input{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--b);border-radius:10px;padding:.6rem .85rem;color:var(--text);font-family:'Tajawal',sans-serif;font-size:.8rem;resize:none;outline:none;transition:border-color .2s;line-height:1.6}
+        .ssg-custom-input:focus{border-color:var(--bh)}
+        .ssg-custom-hint{font-size:.68rem;color:var(--muted);padding:0 .25rem}
+        .ssg-btns{display:flex;gap:.42rem;flex-wrap:wrap}
+        .ssg-btn{padding:.42rem .85rem;border-radius:9px;border:1px solid;font-family:'Tajawal',sans-serif;font-size:.76rem;font-weight:600;cursor:pointer;transition:all .22s}
+        .ssg-wa{background:rgba(37,211,102,.08);border-color:rgba(37,211,102,.22);color:#25d366}.ssg-wa:hover{background:rgba(37,211,102,.18)}
+        .ssg-tw{background:rgba(245,237,228,.04);border-color:rgba(245,237,228,.12);color:var(--soft)}.ssg-tw:hover{background:rgba(245,237,228,.09)}
+        .ssg-fb{background:rgba(24,119,242,.07);border-color:rgba(24,119,242,.22);color:#4e87f0}.ssg-fb:hover{background:rgba(24,119,242,.16)}
+        .ssg-cp{background:rgba(198,146,74,.08);border-color:rgba(198,146,74,.2);color:var(--muted)}.ssg-cp:hover{background:rgba(198,146,74,.15);color:var(--pl);border-color:var(--bh)}
+        /* countdown bar inside SSG */
+        .ssg-expiry-bar{display:flex;align-items:center;gap:.45rem;padding:.45rem 1.1rem;background:rgba(0,0,0,.2);border-bottom:1px solid rgba(122,158,142,.1);font-size:.7rem;color:var(--muted)}
+        .ssg-dot{width:5px;height:5px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:blink 1.4s ease-in-out infinite}
         /* MOOD ANALYTICS */
         .analytics-card{background:var(--card);border:1px solid var(--b);border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.3)}
         .ana-row{display:flex;align-items:center;justify-content:space-between;padding:.65rem 1.2rem;border-bottom:1px solid rgba(198,146,74,.06);transition:background .2s}
@@ -569,20 +586,63 @@
                 <div class="mood-week-grid" id="mood-week-grid"><span style="font-size:.78rem;color:var(--muted);padding:.5rem;">جاري التحميل...</span></div>
             </div>
 
-            {{-- ── MOOD SHARE CARD ── --}}
-            <div class="mood-share-dash" id="mood-share-dash" style="{{ $activeMood ? '' : 'display:none;' }}">
-                <div class="mood-expiry-bar">
-                    <div class="meb-dot"></div>
-                    <span id="mood-expiry-dash-text">حالتك نشطة</span>
+            {{-- ── SMART SHARE MESSAGE GENERATOR ── --}}
+            <div class="ssg-card" id="ssg-card">
+                <div class="ssg-card-glow"></div>
+
+                {{-- Expiry bar (only when mood active) --}}
+                @if($activeMood)
+                <div class="ssg-expiry-bar">
+                    <div class="ssg-dot"></div>
+                    <span id="ssg-expiry-text">حالتك نشطة</span>
                 </div>
-                <div class="mood-share-body">
-                    <p style="font-size:.78rem;color:var(--muted);margin-bottom:.45rem;">شارك حالتك مع رسالة مناسبة</p>
-                    <div class="mood-share-preview-dash" id="mood-share-preview-dash">{{ $shareText ?? '' }}</div>
-                    <div class="mood-share-btns-dash">
-                        <button class="msd-btn msd-wa" onclick="moodShareWa()">💬 واتساب</button>
-                        <button class="msd-btn msd-tw" onclick="moodShareTw()">𝕏 تويتر</button>
-                        <button class="msd-btn msd-cp" onclick="moodShareCopy(this)">📋 نسخ</button>
+                @endif
+
+                {{-- Header --}}
+                <div class="ssg-head">
+                    <div>
+                        <p class="ssg-title">✨ رسالة مشاركة ذكية</p>
+                        <p class="ssg-sub" id="ssg-mood-label">
+                            @if($activeMood)
+                                {{ $activeMood->mood->emoji }} حالتك بتأثر على الرسالة
+                            @else
+                                شارك صفحتك برسالة تلامس القلب
+                            @endif
+                        </p>
                     </div>
+                    <button class="ssg-regen-btn" id="ssg-regen-btn" onclick="loadSmartShare(true)">
+                        🔄 غيّر
+                    </button>
+                </div>
+
+                {{-- Body --}}
+                <div class="ssg-body">
+
+                    {{-- Message preview --}}
+                    <div class="ssg-preview loading" id="ssg-preview">جاري توليد الرسالة...</div>
+
+                    {{-- Custom message toggle + input --}}
+                    <button class="ssg-toggle-custom" id="ssg-toggle-btn" onclick="toggleSsgCustom()">
+                        ✏️ أضف رسالة شخصية
+                    </button>
+                    <div id="ssg-custom-wrap" style="display:none;">
+                        <textarea
+                            id="ssg-custom-input"
+                            class="ssg-custom-input"
+                            rows="2"
+                            placeholder="مثال: أنا آسف على اللي حصل..."
+                        ></textarea>
+                        <p class="ssg-custom-hint">✦ ستُضاف رسالتك بشكل طبيعي داخل النص</p>
+                    </div>
+
+                    {{-- Share buttons --}}
+                    <div class="ssg-btns">
+                        <button class="ssg-btn ssg-wa" onclick="ssgShareWa()">💬 واتساب</button>
+                        <button class="ssg-btn ssg-tw" onclick="ssgShareTw()">𝕏 تويتر</button>
+                        <button class="ssg-btn ssg-fb" onclick="ssgShareFb()">📘 فيسبوك</button>
+                        <button class="ssg-btn ssg-cp" id="ssg-copy-btn" onclick="ssgCopy(this)">📋 نسخ</button>
+                    </div>
+
                 </div>
             </div>
 
@@ -649,7 +709,7 @@
         <p class="share-modal-sub">اختار المنصة وابعت رسالتك لكل الناس اللي عندهم كلام</p>
 
         <div class="share-msg-preview" id="share-msg-preview">
-            قول اللي جواك ليا بصراحة 👀 لو زعلان مني أو عندك حاجة عايز تقولها، ابعتها هنا 👇<br>
+            لو في حاجة في قلبك ناحيتي 💛 عاتبني أو قول اللي حابب تقوله من هنا 👇<br>
             <span style="color:var(--pl);font-weight:600;direction:ltr;display:inline-block;margin-top:.3rem">3tab.app/{{ auth()->user()->username }}</span>
         </div>
 
@@ -748,7 +808,7 @@ let generatedLink   = '';
 
 // ── Share Profile ─────────────────────────────────────────────────────────────
 const PROFILE_URL  = '{{ url("/".auth()->user()->username) }}';
-const SHARE_TEXT   = 'قول اللي جواك ليا بصراحة 👀 لو زعلان مني أو عندك حاجة عايز تقولها، ابعتها هنا 👇 ' + PROFILE_URL;
+const SHARE_TEXT   = 'لو في حاجة في قلبك ناحيتي 💛 عاتبني أو قول اللي حابب تقوله من هنا 👇 ' + PROFILE_URL;
 
 function openShareModal() {
     // Build dynamic platform links
@@ -880,47 +940,103 @@ async function loadMoodHistory(){
     }catch(e){}
 }
 
-// ── Mood Share Card ───────────────────────────────────────────────────────────
-let moodShareText = @json($shareText ?? '');
+// ── Smart Share Generator ────────────────────────────────────────────────────
+let ssgMessage      = '';
+let ssgProfileUrl   = '{{ url("/".auth()->user()->username) }}';
+let ssgDebounce     = null;
 let moodCountdownTimer = null;
+const SSG_ROUTE     = '{{ route("share.message") }}';
 
 function startMoodCountdown(seconds) {
     if (moodCountdownTimer) clearInterval(moodCountdownTimer);
-    const el = document.getElementById('mood-expiry-dash-text');
+    const el = document.getElementById('ssg-expiry-text');
     if (!el) return;
+    let s = seconds;
     function tick() {
-        if (seconds <= 0) { el.textContent = 'انتهت الحالة'; clearInterval(moodCountdownTimer); return; }
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
+        if (s <= 0) { el.textContent = 'انتهت الحالة'; clearInterval(moodCountdownTimer); return; }
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
         el.textContent = `تنتهي بعد ${h}س ${m}د`;
-        seconds -= 60;
+        s -= 60;
     }
     tick();
     moodCountdownTimer = setInterval(tick, 60000);
 }
 
+async function loadSmartShare(regen = false) {
+    const preview  = document.getElementById('ssg-preview');
+    const regenBtn = document.getElementById('ssg-regen-btn');
+    const custom   = document.getElementById('ssg-custom-input')?.value?.trim() || '';
+
+    if (preview)  preview.classList.add('loading');
+    if (regenBtn) regenBtn.disabled = true;
+
+    try {
+        const params = new URLSearchParams({
+            mood:           currentMoodType || 'neutral',
+            custom_message: custom,
+        });
+        const res  = await fetch(`${SSG_ROUTE}?${params}`, {
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
+        });
+        const data = await res.json();
+        ssgMessage = data.message;
+        if (preview) {
+            preview.classList.remove('loading');
+            preview.textContent = data.message;
+        }
+    } catch (e) {
+        if (preview) { preview.classList.remove('loading'); }
+        showToast('تعذّر توليد الرسالة', 'e');
+    } finally {
+        if (regenBtn) regenBtn.disabled = false;
+    }
+}
+
+function toggleSsgCustom() {
+    const wrap = document.getElementById('ssg-custom-wrap');
+    const btn  = document.getElementById('ssg-toggle-btn');
+    const open = wrap.style.display === 'none';
+    wrap.style.display = open ? 'block' : 'none';
+    btn.textContent    = open ? '✕ إخفاء الرسالة الشخصية' : '✏️ أضف رسالة شخصية';
+    if (open) document.getElementById('ssg-custom-input')?.focus();
+}
+
 function renderMoodShareCard(mood, shareText, profileUrl) {
-    moodShareText = shareText;
-    const card = document.getElementById('mood-share-dash');
-    const preview = document.getElementById('mood-share-preview-dash');
-    if (preview) preview.textContent = shareText;
-    if (card) card.style.display = '';
-    if (mood.seconds_remaining) startMoodCountdown(mood.seconds_remaining);
+    // Update mood label
+    const label = document.getElementById('ssg-mood-label');
+    if (label) label.textContent = `${mood.emoji} حالتك بتأثر على الرسالة`;
+    // Show/update expiry bar
+    if (mood.seconds_remaining) {
+        startMoodCountdown(mood.seconds_remaining);
+        const bar = document.querySelector('.ssg-expiry-bar');
+        if (bar) bar.style.display = '';
+    }
+    // Update currentMoodType so next loadSmartShare uses new mood
+    currentMoodType = mood.type;
+    // Regenerate message for the new mood
+    loadSmartShare(true);
     loadMoodAnalytics();
 }
 
-function moodShareWa() {
-    window.open('https://wa.me/?text=' + encodeURIComponent(moodShareText), '_blank');
+function ssgShareWa() {
+    if (!ssgMessage) return;
+    window.open('https://wa.me/?text=' + encodeURIComponent(ssgMessage), '_blank');
 }
-function moodShareTw() {
-    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(moodShareText), '_blank');
+function ssgShareTw() {
+    if (!ssgMessage) return;
+    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(ssgMessage), '_blank');
 }
-function moodShareCopy(btn) {
-    copyText(moodShareText);
+function ssgShareFb() {
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(ssgProfileUrl), '_blank');
+}
+function ssgCopy(btn) {
+    if (!ssgMessage) return;
+    copyText(ssgMessage);
     const orig = btn.textContent;
     btn.textContent = '✅ تم النسخ';
     setTimeout(() => btn.textContent = orig, 2200);
-    showToast('تم نسخ رسالة الحالة 📋', 's');
+    showToast('تم نسخ الرسالة 📋', 's');
 }
 
 async function loadMoodAnalytics() {
@@ -974,6 +1090,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     startMoodCountdown({{ $activeMood->secondsRemaining() }});
     loadMoodAnalytics();
     @endif
+    // Smart Share Generator — load initial message & wire custom input
+    loadSmartShare();
+    const customInput = document.getElementById('ssg-custom-input');
+    if (customInput) {
+        customInput.addEventListener('input', () => {
+            clearTimeout(ssgDebounce);
+            ssgDebounce = setTimeout(() => loadSmartShare(true), 750);
+        });
+    }
     document.getElementById('mood-banner-btn').onclick=
         '{{ $moodEngine["cta_action"] }}'==='send'?openCreateLinkModal:()=>{switchTab('received');document.querySelector('.section-card')?.scrollIntoView({behavior:'smooth'})};
     document.getElementById('dynamic-suggestion-btn').onclick=

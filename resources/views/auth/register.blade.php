@@ -144,37 +144,70 @@
 
                 {{-- كلمة المرور + تأكيد --}}
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:.9rem;">
+
+                    {{-- ── حقل كلمة المرور ── --}}
                     <div>
-                        <label style="display:block;font-size:.78rem;font-weight:600;color:rgba(245,237,228,.5);margin-bottom:.35rem;">كلمة المرور</label>
+                        <label for="password" style="display:block;font-size:.78rem;font-weight:600;color:rgba(245,237,228,.5);margin-bottom:.35rem;">كلمة المرور</label>
                         <div style="position:relative;">
+                            {{-- padding: top | RIGHT=icon(2.2rem) | bottom | LEFT=text-start(.85rem) --}}
                             <input type="password" name="password" id="password"
                                 placeholder="8 أحرف+" autocomplete="new-password" dir="ltr"
                                 style="width:100%;padding:.62rem 2.2rem .62rem .85rem;border:1px solid {{ $errors->has('password') ? 'rgba(248,113,113,.5)' : 'rgba(198,146,74,.18)' }};border-radius:10px;font-family:'Tajawal',sans-serif;font-size:.88rem;background:rgba(0,0,0,.25);color:#F5EDE4;outline:none;transition:border-color .25s,box-shadow .25s;"
                                 onfocus="this.style.borderColor='rgba(198,146,74,.6)';this.style.boxShadow='0 0 0 3px rgba(198,146,74,.1)'"
                                 onblur="this.style.borderColor='rgba(198,146,74,.18)';this.style.boxShadow='none'"
                             />
-                            <button type="button" onclick="togglePass('password','eye1')" style="position:absolute;left:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.8rem;color:rgba(245,237,228,.3);padding:0;line-height:1;transition:color .2s;"
-                                    onmouseover="this.style.color='rgba(245,237,228,.7)'" onmouseout="this.style.color='rgba(245,237,228,.3)'">
-                                <span id="eye1">👁</span>
+                            {{-- FIX: right:.5rem (was left:.6rem — wrong side) --}}
+                            <button type="button"
+                                    onclick="togglePass('password','eye1-open','eye1-closed')"
+                                    aria-label="إظهار كلمة المرور"
+                                    style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:6px;cursor:pointer;padding:0;color:rgba(245,237,228,.3);transition:color .2s,background .2s;"
+                                    onmouseover="this.style.color='rgba(198,146,74,.75)';this.style.background='rgba(198,146,74,.1)'"
+                                    onmouseout="this.style.color='rgba(245,237,228,.3)';this.style.background='none'"
+                                    onfocus="this.style.outline='2px solid rgba(198,146,74,.35)';this.style.outlineOffset='1px'"
+                                    onblur="this.style.outline='none'">
+                                <svg id="eye1-open" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg id="eye1-closed" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                </svg>
                             </button>
                         </div>
                         @error('password')<p style="font-size:.72rem;color:#f87171;margin-top:.25rem;">{{ $message }}</p>@enderror
                     </div>
+
+                    {{-- ── حقل تأكيد كلمة المرور ── --}}
                     <div>
-                        <label style="display:block;font-size:.78rem;font-weight:600;color:rgba(245,237,228,.5);margin-bottom:.35rem;">تأكيد المرور</label>
+                        <label for="password_confirmation" style="display:block;font-size:.78rem;font-weight:600;color:rgba(245,237,228,.5);margin-bottom:.35rem;">تأكيد المرور</label>
                         <div style="position:relative;">
+                            {{-- Same fix: padding-right for icon, icon on right --}}
                             <input type="password" name="password_confirmation" id="password_confirmation"
                                 placeholder="أعد الكتابة" autocomplete="new-password" dir="ltr"
                                 style="width:100%;padding:.62rem 2.2rem .62rem .85rem;border:1px solid rgba(198,146,74,.18);border-radius:10px;font-family:'Tajawal',sans-serif;font-size:.88rem;background:rgba(0,0,0,.25);color:#F5EDE4;outline:none;transition:border-color .25s,box-shadow .25s;"
                                 onfocus="this.style.borderColor='rgba(198,146,74,.6)';this.style.boxShadow='0 0 0 3px rgba(198,146,74,.1)'"
                                 onblur="this.style.borderColor='rgba(198,146,74,.18)';this.style.boxShadow='none'"
                             />
-                            <button type="button" onclick="togglePass('password_confirmation','eye2')" style="position:absolute;left:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.8rem;color:rgba(245,237,228,.3);padding:0;line-height:1;transition:color .2s;"
-                                    onmouseover="this.style.color='rgba(245,237,228,.7)'" onmouseout="this.style.color='rgba(245,237,228,.3)'">
-                                <span id="eye2">👁</span>
+                            {{-- FIX: right:.5rem (was left:.6rem — wrong side) --}}
+                            <button type="button"
+                                    onclick="togglePass('password_confirmation','eye2-open','eye2-closed')"
+                                    aria-label="إظهار كلمة المرور"
+                                    style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:6px;cursor:pointer;padding:0;color:rgba(245,237,228,.3);transition:color .2s,background .2s;"
+                                    onmouseover="this.style.color='rgba(198,146,74,.75)';this.style.background='rgba(198,146,74,.1)'"
+                                    onmouseout="this.style.color='rgba(245,237,228,.3)';this.style.background='none'"
+                                    onfocus="this.style.outline='2px solid rgba(198,146,74,.35)';this.style.outlineOffset='1px'"
+                                    onblur="this.style.outline='none'">
+                                <svg id="eye2-open" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg id="eye2-closed" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                </svg>
                             </button>
                         </div>
                     </div>
+
                 </div>
 
                 {{-- Terms --}}
@@ -260,9 +293,18 @@
     const ovl = document.getElementById('avatar-overlay');
     av.addEventListener('mouseenter', () => ovl.style.opacity = '1');
     av.addEventListener('mouseleave', () => ovl.style.opacity = '0');
-    function togglePass(inputId, eyeId) {
-        const input = document.getElementById(inputId);
-        document.getElementById(eyeId).textContent = (input.type = input.type === 'password' ? 'text' : 'password') === 'text' ? '🙈' : '👁';
+    function togglePass(inputId, eyeOpenId, eyeClosedId) {
+        const input     = document.getElementById(inputId);
+        const btn       = input.parentElement.querySelector('button[aria-label]');
+        const eyeOpen   = document.getElementById(eyeOpenId);
+        const eyeClosed = document.getElementById(eyeClosedId);
+        const showing   = input.type === 'text';
+
+        input.type = showing ? 'password' : 'text';
+        eyeOpen.style.display   = showing ? 'block' : 'none';
+        eyeClosed.style.display = showing ? 'none'  : 'block';
+        if (btn) btn.setAttribute('aria-label', showing ? 'إظهار كلمة المرور' : 'إخفاء كلمة المرور');
+        input.focus();
     }
 
     // تعبئة guest_token من localStorage إذا بعث المستخدم عتاباً قبل التسجيل

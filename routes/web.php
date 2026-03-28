@@ -11,6 +11,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\IgnoreController;
 use App\Http\Controllers\SafetyController;
+use App\Http\Controllers\ShareController;
 use App\Http\Controllers\Admin;
 
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/mood',            [MoodController::class, 'store'])->name('mood.store')->middleware('throttle:3,1');
     Route::get('/mood/history',     [MoodController::class, 'history'])->name('mood.history');
     Route::get('/mood/analytics',   [MoodController::class, 'analytics'])->name('mood.analytics');
+
+    // Smart Share Message Generator
+    Route::get('/share/message',    [ShareController::class, 'generate'])->name('share.message');
 
     // Atab — normal
     Route::post('/atab',                  [AtabController::class, 'store'])->name('atab.store')->middleware('throttle:5,1');

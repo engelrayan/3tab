@@ -74,6 +74,13 @@
                 </p>
             </div>
 
+            {{-- Success flash (e.g. after password reset) --}}
+            @if(session('status'))
+                <div style="background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.22);border-radius:12px;padding:.78rem 1rem;margin-bottom:1.3rem;display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:#4ade80;">
+                    ✅ {{ session('status') }}
+                </div>
+            @endif
+
             {{-- Errors --}}
             @if($errors->any())
                 <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:12px;padding:.75rem 1rem;margin-bottom:1.3rem;font-size:.85rem;color:#f87171;">
@@ -113,34 +120,105 @@
                 {{-- كلمة المرور --}}
                 <div style="margin-bottom:1rem;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
-                        <label style="font-size:.82rem;font-weight:600;color:rgba(245,237,228,.55);">
+                        <label for="password" style="font-size:.82rem;font-weight:600;color:rgba(245,237,228,.55);">
                             كلمة المرور
                         </label>
-                        <a href="#" style="font-size:.78rem;color:#C6924A;transition:color .2s;"
+                        <a href="{{ route('forgot.show') }}" style="font-size:.78rem;color:#C6924A;transition:color .2s;"
                            onmouseover="this.style.color='#E8B96A'" onmouseout="this.style.color='#C6924A'">
                             نسيت كلمة المرور؟
                         </a>
                     </div>
-                    <div style="position:relative;">
+
+                    {{--
+                        FIX: password field icon positioning for RTL + dir="ltr" input.
+                        ─────────────────────────────────────────────────────────────
+                        • Input is dir="ltr"  → text cursor starts at physical LEFT
+                        • Page is RTL         → icon belongs on physical RIGHT
+                        • padding-right:2.75rem keeps text clear of the icon on the right
+                        • padding-left:1rem    gives breathing room on the text-start side
+                        • Button uses right:.55rem  (NOT left) — this was the original bug
+                    --}}
+                    <div style="position:relative; display:flex; align-items:center;">
+
                         <input
-                            type="password" name="password" id="password"
+                            type="password"
+                            name="password"
+                            id="password"
                             placeholder="••••••••"
-                            autocomplete="current-password" dir="ltr"
+                            autocomplete="current-password"
+                            dir="ltr"
                             style="
-                                width:100%; padding:.75rem 2.8rem .75rem 1rem;
-                                border:1px solid rgba(198,146,74,.18);
-                                border-radius:12px;
-                                font-family:'Tajawal',sans-serif; font-size:.95rem;
-                                background:rgba(0,0,0,.25); color:#F5EDE4;
-                                outline:none; transition:border-color .25s, box-shadow .25s;
+                                width: 100%;
+                                /* top | RIGHT=icon-side | bottom | LEFT=text-start */
+                                padding: .78rem 2.75rem .78rem 1rem;
+                                border: 1px solid rgba(198,146,74,.18);
+                                border-radius: 12px;
+                                font-family: 'Tajawal', sans-serif;
+                                font-size: .95rem;
+                                letter-spacing: .05em;
+                                background: rgba(0,0,0,.25);
+                                color: #F5EDE4;
+                                outline: none;
+                                transition: border-color .25s, box-shadow .25s;
                             "
                             onfocus="this.style.borderColor='rgba(198,146,74,.6)';this.style.boxShadow='0 0 0 3px rgba(198,146,74,.1)'"
                             onblur="this.style.borderColor='rgba(198,146,74,.18)';this.style.boxShadow='none'"
                         />
-                        <button type="button" onclick="togglePass()" style="position:absolute;left:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.9rem;color:rgba(245,237,228,.35);padding:0;line-height:1;transition:color .2s;"
-                                onmouseover="this.style.color='rgba(245,237,228,.7)'"
-                                onmouseout="this.style.color='rgba(245,237,228,.35)'">
-                            <span id="eye">👁</span>
+
+                        {{--
+                            Toggle button on physical RIGHT:
+                            • RTL convention: decorative icons sit on the visual "start" = physical right
+                            • LTR text in the input flows LEFT→RIGHT, so the right side is unoccupied
+                            • padding-right:2.75rem above guarantees no overlap
+                        --}}
+                        <button
+                            type="button"
+                            id="pass-toggle"
+                            onclick="togglePass()"
+                            aria-label="إظهار كلمة المرور"
+                            title="إظهار / إخفاء"
+                            style="
+                                position: absolute;
+                                right: .55rem;         /* ← physical RIGHT, matches RTL convention */
+                                top: 50%;
+                                transform: translateY(-50%);
+                                width: 32px;
+                                height: 32px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                background: none;
+                                border: none;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                padding: 0;
+                                color: rgba(245,237,228,.35);
+                                transition: color .2s, background .2s;
+                                flex-shrink: 0;
+                            "
+                            onmouseover="this.style.color='rgba(198,146,74,.8)';this.style.background='rgba(198,146,74,.1)'"
+                            onmouseout="this.style.color='rgba(245,237,228,.35)';this.style.background='none'"
+                            onfocus="this.style.outline='2px solid rgba(198,146,74,.4)';this.style.outlineOffset='2px'"
+                            onblur="this.style.outline='none'"
+                        >
+                            {{-- Eye-open SVG --}}
+                            <svg id="icon-eye-open" xmlns="http://www.w3.org/2000/svg"
+                                 width="17" height="17" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                 style="display:block; transition:opacity .2s;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            {{-- Eye-closed SVG (hidden by default) --}}
+                            <svg id="icon-eye-closed" xmlns="http://www.w3.org/2000/svg"
+                                 width="17" height="17" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                 style="display:none; transition:opacity .2s;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -203,10 +281,23 @@
 
 <script>
     function togglePass() {
-        const input = document.getElementById('password');
-        const eye   = document.getElementById('eye');
-        input.type  = input.type === 'password' ? 'text' : 'password';
-        eye.textContent = input.type === 'password' ? '👁' : '🙈';
+        const input     = document.getElementById('password');
+        const btn       = document.getElementById('pass-toggle');
+        const eyeOpen   = document.getElementById('icon-eye-open');
+        const eyeClosed = document.getElementById('icon-eye-closed');
+        const showing   = input.type === 'text';
+
+        input.type = showing ? 'password' : 'text';
+
+        // swap icons with a quick fade
+        eyeOpen.style.display   = showing ? 'block' : 'none';
+        eyeClosed.style.display = showing ? 'none'  : 'block';
+
+        // update accessibility label
+        btn.setAttribute('aria-label', showing ? 'إظهار كلمة المرور' : 'إخفاء كلمة المرور');
+
+        // refocus input after toggle (better UX)
+        input.focus();
     }
 
     // تعبئة guest_token من localStorage عند تسجيل الدخول
